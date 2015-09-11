@@ -4,12 +4,13 @@ var _ = require('lodash');
 createPossibleAddresses = function(name, domain){
 	var addresses = [];
 	var variations = [];
-	
+	domain = domain.trim().toLowerCase();
+
 	var latinize = require('latinize');
 	name = latinize(name.toLowerCase());
 	
 	var nameParts = [];
-	nameParts[0] = name.split(" ");
+	nameParts[0] = name.trim().replace(/[^a-zA-Z ]/g, "").split(" ");
 
 	var j = 0;
 
@@ -35,7 +36,6 @@ createPossibleAddresses = function(name, domain){
 
 	return _.uniq(addresses);
 }
-
 
 module.exports = function(name,domain,options,callback){
 	// check if options are given
