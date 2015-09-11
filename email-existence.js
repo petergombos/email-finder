@@ -2,14 +2,14 @@ var dns = require('dns'),
 	net = require('net');
 
 /**
- * This module will validate an array of email addresses using SMTP's RCPT TO: command.
- * Note: all supplied email must be on the same domain
- * @param  {Array}		emails		An array of email addresses to be checked
+ * This module will validate email addresses using SMTP's RCPT TO: command.
+ * @param  {Array}		accounts	An array of accounts to be checked on a given domain
+ * @param  {String}		domain		The domain address we use for the emails
  * @param  {Object}		options 	timeout, from_email, fqdn, debug
  * @param  {Function}	callback	Gets calld with a first param being an error object, and a second param being an array of valid email addresses.
  * This module is based on: https://github.com/nmanousos/email-existence
  */
-module.exports = function(emails, options, callback) {
+module.exports = function(accounts, domain, options, callback) {
 	
 	// check if options is given
 	if(typeof options === "function"){
@@ -17,20 +17,21 @@ module.exports = function(emails, options, callback) {
 		options = {};
 	}
 
-	// Set defaults
-	options.timeout = options.timeout || 10000;
-	options.from_email = options.from_email || emails[0];
-	options.debug = options.debug || false;
 
 	// check if only one email is given
-	if(typeof emails === "string"){
-		emails = [emails];
+	if(typeof accounts === "string"){
+		accounts = [accounts];
 	}
 
-	// Removing wrongly formatted emails
-	for(var i = 0;i < emails.length; i++){
-		if (!/^\S+@\S+$/.test(emails[i])) {
-			emails.splice(i,1);
+	// Clean domain input
+	domain = domain.trim().toLowerCase();
+
+	// Create and validate email addresses from accouns
+	var emails = [];
+	for(var i = 0;i < accounts.length; i++){
+		var email = accounts[i] + "@" + domain;
+		if (/^\S+@\S+$/.test(email)) {
+			emails.push(email);
 		}
 	}
 	
@@ -39,9 +40,14 @@ module.exports = function(emails, options, callback) {
 		return callback({code : 700, message : "No email addresses were given"}, validAddesses);
 	}
 	
+	// Set defaults
+	options.timeout = options.timeout || 10000;
+	options.from_email = options.from_email || emails[0];
+	options.debug = options.debug || false;
+	
 
 	// Getting the MX records for the domain
-	dns.resolveMx(emails[0].split('@')[1], function(err, addresses) {
+	dns.resolveMx(domain, function(err, addresses) {
 		
 		// If there is enathing wrong with the domain returning an error
 		if (err || addresses.length === 0) {

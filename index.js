@@ -1,12 +1,9 @@
 var emailExistence = require('./email-existence.js');
 var _ = require('lodash');
 
-createPossibleAddresses = function(name, domain){
+createPossibleAccounts = function(name){
 	var addresses = [];
 	var variations = [];
-
-	// Clean domain input
-	domain = domain.trim().toLowerCase();
 
 	// Removing non english characters and converting name to lovercase
 	var latinize = require('latinize');
@@ -51,8 +48,8 @@ createPossibleAddresses = function(name, domain){
 
 	// Creating final addresses from variations
 	for(var i=0; i < variations.length; i++){
-		addresses.push(variations[i].join('') + "@" + domain);
-		addresses.push(variations[i].join('.') + "@" + domain);
+		addresses.push(variations[i].join(''));
+		addresses.push(variations[i].join('.'));
 	}
 
 	return _.uniq(addresses);
@@ -65,7 +62,7 @@ module.exports = function(name,domain,options,callback){
 		options = {};
 	}
 	
-	emailExistence(createPossibleAddresses(name, domain), options ,function(err, validAddresses) {
+	emailExistence(createPossibleAccounts(name), domain, options ,function(err, validAddresses) {
 		callback(err, validAddresses);
 	});
 }
