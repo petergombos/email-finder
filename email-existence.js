@@ -142,15 +142,16 @@ module.exports = function(accounts, domain, options, callback) {
 				}
 				
 				// If response has positive codes
-				if (responseCode === "220" || responseCode === "250" || responseCode === "221"){
+				if (responseCode === "220" || responseCode === "250" || responseCode === "221" || responseCode === "450"){
 					
 					// If this response is after the catchall check we retun an error
 					if (i === 3) {
 						conn.emit('false', {code: 705, message : "domain has catchall address"});
 					} else {
 
-						// Woohoo new validated address found
-						if(i > 3 && responseCode === "250"){
+						// Woohoo new validated address found  
+						// (450) is for google apps https://support.google.com/mail/answer/6592
+						if(i > 3 && (responseCode === "250" || responseCode === "450")){
 							validAddesses.push(emails[i-4]);
 						}
 						
