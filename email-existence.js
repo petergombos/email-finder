@@ -131,7 +131,7 @@ module.exports = function(accounts, domain, options, callback) {
 				var response = data.toString().replace(/(?:\\[rn]|[\r\n]+)+/g, "");
 				
 				// Grepping the response code
-				var responseCode = response.substring(0,3);
+				var responseCode = parseInt(response.substring(0,3),10);
 				
 				// Grepping subcode
 				var responseSubCode = response.substring(4,9);
@@ -142,7 +142,7 @@ module.exports = function(accounts, domain, options, callback) {
 				}
 				
 				// If response has positive codes
-				if (responseCode === "220" || responseCode === "250" || responseCode === "221" || responseCode === "450"){
+				if (responseCode === 220 || responseCode === 250 || responseCode === 221 || responseCode === 450){
 					
 					// If this response is after the catchall check we retun an error
 					if (i === 3) {
@@ -151,7 +151,7 @@ module.exports = function(accounts, domain, options, callback) {
 
 						// Woohoo new validated address found  
 						// (450) is for google apps https://support.google.com/mail/answer/6592
-						if(i > 3 && (responseCode === "250" || responseCode === "450")){
+						if(i > 3 && (responseCode === 250 || responseCode === 450)){
 							validAddesses.push(emails[i-4]);
 						}
 						
@@ -160,7 +160,7 @@ module.exports = function(accounts, domain, options, callback) {
 
 					}
 				// If response contains 550, 553, 554 (email not found) lets go to the next command
-				} else if (responseCode === "550" || responseCode === "553" || responseCode === "554") {
+				} else if (responseCode === 550 || responseCode === 553 || responseCode === 554) {
 							conn.emit('prompt');
 				// If anythimg else goes on retun it as an error
 				} else {
