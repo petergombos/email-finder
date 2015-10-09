@@ -159,8 +159,8 @@ module.exports = function(accounts, domain, options, callback) {
 						conn.emit('prompt');
 
 					}
-				// If response contains 550 (email not found) lets go to the next command
-				} else if (responseCode === "550") {
+				// If response contains 550, 553, 554 (email not found) lets go to the next command
+				} else if (responseCode === "550" || responseCode === "553" || responseCode === "554") {
 							conn.emit('prompt');
 				// If anythimg else goes on retun it as an error
 				} else {
