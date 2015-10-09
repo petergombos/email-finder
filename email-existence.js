@@ -164,7 +164,7 @@ module.exports = function(accounts, domain, options, callback) {
 							conn.emit('prompt');
 				// If anythimg else goes on retun it as an error
 				} else {
-						conn.emit('false', {code: 704, message : data.toString()});
+						conn.emit('false', {code: 704, message : data.toString(), smtpStatusCode : responseCode});
 				}
 			});
 		});
