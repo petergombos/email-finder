@@ -37,7 +37,7 @@ module.exports = function(accounts, domain, options, callback) {
 	
 	// If not even one email address is given retun an error
 	if(emails.length === 0){
-		return callback({code : 700, message : "No email addresses were given"}, validAddesses);
+		return callback({code : 700, message : "Could not create valid email addresses from accounts"}, validAddesses);
 	}
 	
 	// Set defaults
@@ -49,9 +49,9 @@ module.exports = function(accounts, domain, options, callback) {
 	// Getting the MX records for the domain
 	dns.resolveMx(domain, function(err, addresses) {
 		
-		// If there is enathing wrong with the domain returning an error
+		// If there is anything wrong with the domain or no MX record found
 		if (err || addresses.length === 0) {
-			callback({code:701, message : "problem with the domain"}, validAddesses);
+			callback({code:701, message : "Could not found valid MX records for this domain: " + domain}, validAddesses);
 			return;
 		}
 		
@@ -89,7 +89,7 @@ module.exports = function(accounts, domain, options, callback) {
 		
 		// On error, we close the connection
 		conn.on('error', function() {
-			conn.emit('false',{code : 703, message : "Connection error"});
+			conn.emit('false',{code : 702, message : "Connection error"});
 		});
 
 		// If anything goes bad this gets called
@@ -97,6 +97,11 @@ module.exports = function(accounts, domain, options, callback) {
 			callback(err, validAddesses);
 			conn.removeAllListeners();
 			conn.destroy();
+		});
+
+		// Gets called on connection timeout
+		conn.on('timeout', function() {
+			conn.emit('false', {code:703, message :"Connection timeout"});
 		});
 
 		// On Connection
@@ -117,11 +122,6 @@ module.exports = function(accounts, domain, options, callback) {
 					conn.removeAllListeners();
 					conn.destroy(); //destroy socket manually
 				}
-			});
-
-			// Gets called on connection timeout
-			conn.on('timeout', function() {
-				conn.emit('false', {code:702, message :"Connection timeout"});
 			});
 
 			// Whe data is received on the socket
@@ -146,7 +146,7 @@ module.exports = function(accounts, domain, options, callback) {
 					
 					// If this response is after the catchall check we retun an error
 					if (i === 3) {
-						conn.emit('false', {code: 705, message : "domain has catchall address"});
+						conn.emit('false', {code: 705, message : "Domain has catchall address"});
 					} else {
 
 						// Woohoo new validated address found  
