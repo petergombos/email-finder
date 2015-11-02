@@ -1,7 +1,8 @@
 var emailExistence = require('./email-existence.js');
 var _ = require('lodash');
+var Promise = require('bluebird');
 
-createPossibleAccounts = function(name){
+function createPossibleAccounts(name){
 	var addresses = [];
 	var variations = [];
 
@@ -52,17 +53,53 @@ createPossibleAccounts = function(name){
 		addresses.push(variations[i].join('.'));
 	}
 
-	return _.uniq(addresses);
+	return _.sortBy(_.uniq(addresses), function(o){ return o.length }).reverse();
 }
 
-module.exports = function(name,domain,options,callback){
+function emailFinder(name,domain,options,callback){
 	// check if options are given
 	if(typeof options === "function"){
 		callback = options;
 		options = {};
 	}
+
+
+	// Lets create guesses for accouns
+	var accounts = createPossibleAccounts(name);
 	
-	emailExistence(createPossibleAccounts(name), domain, options ,function(err, validAddresses) {
-		callback(err, validAddresses);
+
+	// Handling maximum account guessing per connection (this is for 421 Too many error)
+	options.max_try_per_connection = options.max_try_per_connection || 15;
+	var i,j,chunk = options.max_try_per_connection;
+	var temparray = [];
+	for (i=0,j=accounts.length; i<j; i+=chunk) {
+	    temparray.push(accounts.slice(i,i+chunk));
+	}
+	
+
+	// Creating emailExistence promises
+	emailExistencePromises = _.map(temparray, function(chunk){
+		return emailExistence(chunk, domain, options);
+	});
+	
+	Promise.all(emailExistencePromises).then(function(results){
+		var validAddresses = [];
+		
+		results.forEach(function(result){
+			result.forEach(function(email){
+				validAddresses.push(email);
+			})
+		});
+
+		// Return validated addresses
+		callback(null,validAddresses);
+
+	}).catch(function(reason){
+
+		// If shit hits the fan
+		callback(reason);
+
 	});
 }
+
+module.exports = emailFinder;
