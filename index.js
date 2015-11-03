@@ -3,9 +3,9 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 
 function createPossibleAccounts(name){
+
 	var addresses = [];
 	var variations = [];
-
 	// Removing non english characters and converting name to lovercase
 	var latinize = require('latinize');
 	name = latinize(name.toLowerCase());
@@ -66,7 +66,6 @@ function emailFinder(name,domain,options,callback){
 
 	// Lets create guesses for accouns
 	var accounts = createPossibleAccounts(name);
-	
 
 	// Handling maximum account guessing per connection (this is for 421 Too many error)
 	options.max_try_per_connection = options.max_try_per_connection || 15;
@@ -77,12 +76,9 @@ function emailFinder(name,domain,options,callback){
 	}
 	
 
-	// Creating emailExistence promises
-	emailExistencePromises = _.map(temparray, function(chunk){
-		return emailExistence(chunk, domain, options);
-	});
-	
-	Promise.all(emailExistencePromises).then(function(results){
+	Promise.map(temparray, function(chunk){
+		return emailExistence(chunk, domain, options); 
+	},{concurrency: 1}).then(function(results){
 		var validAddresses = [];
 		
 		results.forEach(function(result){
